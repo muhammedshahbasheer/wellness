@@ -8,14 +8,14 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 
-class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({super.key});
+class TrainerRegistrationPage extends StatefulWidget {
+  const TrainerRegistrationPage({super.key});
 
   @override
-  _RegistrationPageState createState() => _RegistrationPageState();
+  _TrainerRegistrationPageState createState() => _TrainerRegistrationPageState();
 }
 
-class _RegistrationPageState extends State<RegistrationPage> {
+class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -101,7 +101,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             'email': _emailController.text.trim(),
             'age': int.parse(_ageController.text.trim()),
             'uid': user.uid,
-            'role':'user',
+            'role':'trainer',
             'profileImageUrl': imageUrl ?? '',
           });
 
@@ -151,11 +151,40 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  _buildTextField(_nameController, 'Name'),
-                  _buildTextField(_emailController, 'Email', TextInputType.emailAddress),
-                  _buildTextField(_ageController, 'Age', TextInputType.number),
-                  _buildTextField(_passwordController, 'Password', TextInputType.visiblePassword, true),
-                  _buildTextField(_confirmPasswordController, 'Confirm Password', TextInputType.visiblePassword, true),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(labelText: 'Name'),
+                    validator: (value) => value!.isEmpty ? 'Enter your name' : null,
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(labelText: 'Email', hoverColor: Colors.white),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) => !value!.contains('@') ? 'Enter a valid email' : null,
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _ageController,
+                    decoration: InputDecoration(labelText: 'Age'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) => int.tryParse(value!) == null ? 'Enter a valid age' : null,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (value) => value!.length < 6 ? 'Password must be 6+ chars' : null,
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    decoration: InputDecoration(labelText: 'Confirm Password'),
+                    obscureText: true,
+                    validator: (value) => value != _passwordController.text ? 'Passwords do not match' : null,
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _registerTrainer,
@@ -166,26 +195,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String label, [TextInputType? keyboardType, bool obscureText = false]) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white),
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        validator: (value) => value!.isEmpty ? 'Enter your $label' : null,
       ),
     );
   }
