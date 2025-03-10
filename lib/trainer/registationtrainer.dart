@@ -44,13 +44,18 @@ class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
     }
   }
 
-  Future<String?> _uploadImageToCloudinary(File imageFile) async {
+  Future<String?> _uploadImageToCloudinary(Uint8List? webImage, File? mobileImage) async {
     const cloudinaryUrl = "https://api.cloudinary.com/v1_1/dvijd3hxi/image/upload";
     const uploadPreset = "profile_images";
 
-    final request = http.MultipartRequest('POST', Uri.parse(cloudinaryUrl));
+    var request = http.MultipartRequest('POST', Uri.parse(cloudinaryUrl));
     request.fields['upload_preset'] = uploadPreset;
-    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+    if (kIsWeb && webImage != null) {
+      request.files.add(http.MultipartFile.fromBytes('file', webImage, filename: 'profile.png'));
+    } else if (mobileImage != null) {
+      request.files.add(await http.MultipartFile.fromPath('file', mobileImage.path));
+    }
 
     final response = await request.send();
     final responseData = await response.stream.bytesToString();
@@ -83,11 +88,7 @@ class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
       }
 
       try {
-        String? imageUrl;
-
-        if (!kIsWeb && _image != null) {
-          imageUrl = await _uploadImageToCloudinary(_image!);
-        }
+        String? imageUrl = await _uploadImageToCloudinary(_webImage, _image);
 
         UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
@@ -101,7 +102,7 @@ class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
             'email': _emailController.text.trim(),
             'age': int.parse(_ageController.text.trim()),
             'uid': user.uid,
-            'role':'trainer',
+            'role': 'trainer',
             'profileImageUrl': imageUrl ?? '',
           });
 
@@ -151,40 +152,11 @@ class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(labelText: 'Name'),
-                    validator: (value) => value!.isEmpty ? 'Enter your name' : null,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(labelText: 'Email', hoverColor: Colors.white),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) => !value!.contains('@') ? 'Enter a valid email' : null,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _ageController,
-                    decoration: InputDecoration(labelText: 'Age'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) => int.tryParse(value!) == null ? 'Enter a valid age' : null,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(labelText: 'Password'),
-                    obscureText: true,
-                    validator: (value) => value!.length < 6 ? 'Password must be 6+ chars' : null,
-                  ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    validator: (value) => value != _passwordController.text ? 'Passwords do not match' : null,
-                  ),
+                  _buildTextField(_nameController, 'Name'),
+                  _buildTextField(_emailController, 'Email', TextInputType.emailAddress),
+                  _buildTextField(_ageController, 'Age', TextInputType.number),
+                  _buildTextField(_passwordController, 'Password', TextInputType.visiblePassword, true),
+                  _buildTextField(_confirmPasswordController, 'Confirm Password', TextInputType.visiblePassword, true),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _registerTrainer,
@@ -195,6 +167,26 @@ class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label, [TextInputType? keyboardType, bool obscureText = false]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        obscureText: obscureText,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white),
+          filled: true,
+          fillColor: Colors.grey[800],
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        validator: (value) => value!.isEmpty ? 'Enter your $label' : null,
       ),
     );
   }

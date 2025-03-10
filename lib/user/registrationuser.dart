@@ -44,13 +44,18 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  Future<String?> _uploadImageToCloudinary(File imageFile) async {
+  Future<String?> _uploadImageToCloudinary(dynamic imageFile) async {
     const cloudinaryUrl = "https://api.cloudinary.com/v1_1/dvijd3hxi/image/upload";
     const uploadPreset = "profile_images";
 
     final request = http.MultipartRequest('POST', Uri.parse(cloudinaryUrl));
     request.fields['upload_preset'] = uploadPreset;
-    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+    if (kIsWeb) {
+      request.files.add(http.MultipartFile.fromBytes('file', imageFile, filename: 'profile.png'));
+    } else {
+      request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+    }
 
     final response = await request.send();
     final responseData = await response.stream.bytesToString();
@@ -60,7 +65,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       return data['secure_url'];
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image upload failed!')),
+        const SnackBar(content: Text('Image upload failed!')),
       );
       return null;
     }
@@ -70,14 +75,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text.trim() != _confirmPasswordController.text.trim()) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Passwords do not match!')),
+          const SnackBar(content: Text('Passwords do not match!')),
         );
         return;
       }
 
       if (_image == null && _webImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select a profile image!')),
+          const SnackBar(content: Text('Please select a profile image!')),
         );
         return;
       }
@@ -85,7 +90,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
       try {
         String? imageUrl;
 
-        if (!kIsWeb && _image != null) {
+        if (kIsWeb && _webImage != null) {
+          imageUrl = await _uploadImageToCloudinary(_webImage);
+        } else if (_image != null) {
           imageUrl = await _uploadImageToCloudinary(_image!);
         }
 
@@ -96,17 +103,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
         User? user = userCredential.user;
         if (user != null) {
-          await _firestore.collection('trainers').doc(user.uid).set({
+          await _firestore.collection('users').doc(user.uid).set({
             'name': _nameController.text.trim(),
             'email': _emailController.text.trim(),
             'age': int.parse(_ageController.text.trim()),
             'uid': user.uid,
-            'role':'user',
+            'role': 'user',
             'profileImageUrl': imageUrl ?? '',
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Trainer Registered Successfully!')),
+            const SnackBar(content: Text('User Registered Successfully!')),
           );
 
           Navigator.pop(context);
@@ -124,11 +131,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Trainer Registration', style: TextStyle(color: Colors.white)),
+        title: const Text('Trainer Registration', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Center(
           child: SingleChildScrollView(
             child: Form(
@@ -146,20 +153,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               ? FileImage(_image!) as ImageProvider
                               : null,
                       child: (_image == null && _webImage == null)
-                          ? Icon(Icons.camera_alt, color: Colors.white)
+                          ? const Icon(Icons.camera_alt, color: Colors.white)
                           : null,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildTextField(_nameController, 'Name'),
                   _buildTextField(_emailController, 'Email', TextInputType.emailAddress),
                   _buildTextField(_ageController, 'Age', TextInputType.number),
                   _buildTextField(_passwordController, 'Password', TextInputType.visiblePassword, true),
                   _buildTextField(_confirmPasswordController, 'Confirm Password', TextInputType.visiblePassword, true),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _registerTrainer,
-                    child: Text('Register'),
+                    child: const Text('Register'),
                   ),
                 ],
               ),

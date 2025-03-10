@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:wellness/admin/homescreen.dart';
+import 'package:wellness/admin/adminhome.dart';
 import 'package:wellness/trainer/trainerhomepage.dart';
 import 'package:wellness/user/homepage.dart';
 import 'package:wellness/user/registrationuser.dart';
@@ -12,19 +12,17 @@ class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
-  
-     
-class _LoginPageState extends State<LoginPage> {
 
-final _formKey = GlobalKey<FormState>();
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String email = '';
   String password = '';
   bool passwordVisible = false;
 
-  final String adminEmail = "admin@arsmart.com";
-  final String adminPassword = "admin123";
+  final String adminEmail = "shalu@wellness.com";
+  final String adminPassword = "shalu123";
 
   bool isLoading = false;
 
@@ -49,27 +47,30 @@ final _formKey = GlobalKey<FormState>();
           password: password,
         );
 
-        DocumentSnapshot sellerDoc = await _firestore.collection('Sellers').doc(userCredential.user!.uid).get();
-        if (sellerDoc.exists) {
-          bool isApproved = sellerDoc['approved'];
+        DocumentSnapshot trainerDoc = await _firestore.collection('trainers').doc(userCredential.user!.uid).get();
+        if (trainerDoc.exists) {
+          bool isApproved = trainerDoc['approved'];
           if (!isApproved) {
+            setState(() {
+              isLoading = false;
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text("No permission to login. Please contact admin.")),
             );
             return;
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("trainer login successful")),
+              SnackBar(content: Text("Trainer login successful")),
             );
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => TrainerHomePage()));
             return;
           }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("User login successful")),
+          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("User login successful")),
-        );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomePage()));
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? "Login Error")),
@@ -81,8 +82,9 @@ final _formKey = GlobalKey<FormState>();
       }
     }
   }
+
   @override
- Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(

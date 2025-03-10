@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:wellness/trainer/reel.dart';
+
+
 
 class TrainerHomePage extends StatelessWidget {
   const TrainerHomePage({super.key});
@@ -21,18 +24,23 @@ class TrainerHomePage extends StatelessWidget {
             _buildDashboardCard(context, Icons.person, 'Clients', Colors.green),
             _buildDashboardCard(context, Icons.schedule, 'Schedule', Colors.orange),
             _buildDashboardCard(context, Icons.chat, 'Messages', Colors.purple),
+            _buildDashboardCard(context, Icons.video_library, 'Reels', Colors.red, isReels: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDashboardCard(BuildContext context, IconData icon, String title, Color color) {
+  Widget _buildDashboardCard(BuildContext context, IconData icon, String title, Color color, {bool isReels = false}) {
     return GestureDetector(
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title clicked!')),
-        );
+        if (isReels) {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const UploadReelPage()));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$title clicked!')),
+          );
+        }
       },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -54,10 +62,4 @@ class TrainerHomePage extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: TrainerHomePage(),
-  ));
 }

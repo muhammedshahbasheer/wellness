@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:wellness/user/profilemanagment.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,14 +12,28 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  String? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    getUserId();
+  }
+
+  Future<void> getUserId() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      userId = user?.uid;
+    });
+  }
 
   // List of pages
-  final List<Widget> _pages = [
-    Center(child: Text('Dashboard', style: TextStyle(fontSize: 20, color: Colors.white))),
-    Center(child: Text('Diary', style: TextStyle(fontSize: 20, color: Colors.white))),
-    Center(child: Text('Add Entry', style: TextStyle(fontSize: 20, color: Colors.white))), // Placeholder for add button
-    Center(child: Text('Plans', style: TextStyle(fontSize: 20, color: Colors.white))),
-    ProfilePage(), // Profile Page
+  List<Widget> get _pages => [
+    const Center(child: Text('Dashboard', style: TextStyle(fontSize: 20, color: Colors.white))),
+    const Center(child: Text('Diary', style: TextStyle(fontSize: 20, color: Colors.white))),
+    const Center(child: Text('Add Entry', style: TextStyle(fontSize: 20, color: Colors.white))), // Placeholder for add button
+    const Center(child: Text('Plans', style: TextStyle(fontSize: 20, color: Colors.white))),
+    userId != null ? UserProfilePage(userId: userId!) : const Center(child: CircularProgressIndicator()), // Profile Page
   ];
 
   void _onItemTapped(int index) {
@@ -34,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       floatingActionButton: FloatingActionButton(
-        child: Icon(
+        child: const Icon(
           Icons.support_agent,
           color: Colors.blue,
           size: 50,
@@ -43,10 +57,10 @@ class _HomePageState extends State<HomePage> {
       ),
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text('Wellness', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+        title: const Text('Wellness', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.white),
+            icon: const Icon(Icons.notifications, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -58,7 +72,7 @@ class _HomePageState extends State<HomePage> {
         unselectedItemColor: Colors.black,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped, // Handle tap
-        items: [
+        items: const [
           BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(LucideIcons.bookOpen), label: 'Diary'),
           BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 40, color: Colors.blue), label: ''), // Non-selectable
