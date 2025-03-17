@@ -103,6 +103,7 @@ class _TrainerRegistrationPageState extends State<TrainerRegistrationPage> {
             'age': int.parse(_ageController.text.trim()),
             'uid': user.uid,
             'role': 'trainer',
+            'approved':false,
             'profileImageUrl': imageUrl ?? '',
           });
 

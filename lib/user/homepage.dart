@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:wellness/user/chatbot.dart';
+import 'package:wellness/user/dashboard.dart';
+import 'package:wellness/user/diary.dart';
 import 'package:wellness/user/profilemanagment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:wellness/user/reelview.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +17,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   String? userId;
+  final PageController _pageController = PageController(); // Page controller for smooth navigation
 
   @override
   void initState() {
@@ -22,25 +27,29 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> getUserId() async {
     User? user = FirebaseAuth.instance.currentUser;
-    setState(() {
-      userId = user?.uid;
-    });
+    if (user != null) {
+      setState(() {
+        userId = user.uid;
+      });
+    }
   }
 
   // List of pages
-  List<Widget> get _pages => [
-    const Center(child: Text('Dashboard', style: TextStyle(fontSize: 20, color: Colors.white))),
-    const Center(child: Text('Diary', style: TextStyle(fontSize: 20, color: Colors.white))),
-    const Center(child: Text('Add Entry', style: TextStyle(fontSize: 20, color: Colors.white))), // Placeholder for add button
+  final List<Widget> _pages = [
+    const CalorieSliderScreen(),
+    const DiaryPage(),
+    const ReelViewer(), // Reel page (video won't autoplay when switching tabs)
     const Center(child: Text('Plans', style: TextStyle(fontSize: 20, color: Colors.white))),
-    userId != null ? UserProfilePage(userId: userId!) : const Center(child: CircularProgressIndicator()), // Profile Page
+    UserProfileScreen(), // Profile page
   ];
 
   void _onItemTapped(int index) {
-    if (index == 2) return; // Prevent selection for the middle button
     setState(() {
       _selectedIndex = index;
     });
+
+    // Move to selected page smoothly
+    _pageController.jumpToPage(index);
   }
 
   @override
@@ -53,7 +62,10 @@ class _HomePageState extends State<HomePage> {
           color: Colors.blue,
           size: 50,
         ),
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(context,
+          MaterialPageRoute(builder : (context) => DietChatBotScreen()));
+        },
       ),
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -61,23 +73,33 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              // Add notification action here if needed
+            },
           ),
         ],
       ),
-      body: _pages[_selectedIndex], // Dynamic page switching
+      body: PageView(
+        controller: _pageController,
+        children: _pages,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped, // Handle tap
         items: const [
           BottomNavigationBarItem(icon: Icon(LucideIcons.home), label: 'Dashboard'),
           BottomNavigationBarItem(icon: Icon(LucideIcons.bookOpen), label: 'Diary'),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 40, color: Colors.blue), label: ''), // Non-selectable
+          BottomNavigationBarItem(icon: Icon(Icons.video_collection, size: 40, color: Colors.blue), label: ''), // Middle button
           BottomNavigationBarItem(icon: Icon(LucideIcons.clipboardList), label: 'Plans'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.userCircle), label: 'Profile'), // Navigate to Profile
+          BottomNavigationBarItem(icon: Icon(LucideIcons.userCircle), label: 'Profile'),
         ],
       ),
     );
