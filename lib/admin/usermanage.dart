@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:wellness/admin/userdetails.dart';
+import 'userdetails.dart'; // <--- Import the detail page
 
 class UserManagementPage extends StatelessWidget {
   const UserManagementPage({Key? key}) : super(key: key);
@@ -27,6 +29,8 @@ class UserManagementPage extends StatelessWidget {
             itemCount: users.length,
             itemBuilder: (context, index) {
               var user = users[index].data() as Map<String, dynamic>;
+              var userId = users[index].id;
+
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -39,10 +43,18 @@ class UserManagementPage extends StatelessWidget {
                   ),
                   title: Text(user['name'] ?? 'No name'),
                   subtitle: Text(user['email'] ?? 'No email'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserDetailPage(userId: userId, userData: user),
+                      ),
+                    );
+                  },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      await FirebaseFirestore.instance.collection('users').doc(users[index].id).delete();
+                      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User deleted')));
                     },
                   ),

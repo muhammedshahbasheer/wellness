@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   String password = '';
   bool passwordVisible = false;
 
-  final String adminEmail = "shalu@wellness.com";
+  final String adminEmail = "shalu@2023.com";
   final String adminPassword = "shalu123";
 
   bool isLoading = false;

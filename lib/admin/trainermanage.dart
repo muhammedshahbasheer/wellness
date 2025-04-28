@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:wellness/admin/trainerdetails.dart';
+import 'trainerdetails.dart'; // <-- Import the detail page
 
 class TrainerManagementPage extends StatefulWidget {
   const TrainerManagementPage({Key? key}) : super(key: key);
@@ -22,39 +24,54 @@ class _TrainerManagementPageState extends State<TrainerManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Trainer Management'),
+        title: const Text('Trainer Management'),
         backgroundColor: Colors.black,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore.collection('trainers').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No trainers found'));
+            return const Center(child: Text('No trainers found'));
           }
           return ListView.builder(
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               var trainer = snapshot.data!.docs[index];
+              var trainerData = trainer.data() as Map<String, dynamic>;
+
               return Card(
-                margin: EdgeInsets.all(8),
+                margin: const EdgeInsets.all(8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: NetworkImage(trainer['profileImageUrl']),
+                    backgroundImage: trainerData['profileImageUrl'] != null
+                        ? NetworkImage(trainerData['profileImageUrl'])
+                        : const AssetImage('assets/default_profile.png') as ImageProvider,
                   ),
-                  title: Text(trainer['name'] ?? 'Unnamed Trainer'),
-                  subtitle: Text(trainer['email'] ?? 'No email'),
+                  title: Text(trainerData['name'] ?? 'Unnamed Trainer'),
+                  subtitle: Text(trainerData['email'] ?? 'No email'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TrainerDetailPage(
+                          trainerId: trainer.id,
+                          trainerData: trainerData,
+                        ),
+                      ),
+                    );
+                  },
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.check, color: Colors.green),
+                        icon: const Icon(Icons.check, color: Colors.green),
                         onPressed: () => updateTrainerApproval(trainer.id, true),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close, color: Colors.red),
+                        icon: const Icon(Icons.close, color: Colors.red),
                         onPressed: () => updateTrainerApproval(trainer.id, false),
                       ),
                     ],
