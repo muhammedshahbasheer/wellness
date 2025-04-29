@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
         ),
         onPressed: () {
           Navigator.push(context,
-          MaterialPageRoute(builder : (context) => DietChatBotScreen()));
+          MaterialPageRoute(builder : (context) => ChatScreen()));
         },
       ),
       appBar: AppBar(

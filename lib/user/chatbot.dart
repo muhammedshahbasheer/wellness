@@ -1,88 +1,125 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class DietChatBotScreen extends StatefulWidget {
+class ChatScreen extends StatefulWidget {
   @override
-  _DietChatBotScreenState createState() => _DietChatBotScreenState();
+  _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _DietChatBotScreenState extends State<DietChatBotScreen> {
+class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, String>> _messages = [];
 
-  void _sendMessage() {
-    if (_controller.text.isEmpty) return;
+  final String apiKey = 'AIzaSyDK5rpV9edFjGgxvW4Iqulp7xG3Pew0lSU';
+
+  Future<void> _sendMessage() async {
+    String userMessage = _controller.text.trim();
+    if (userMessage.isEmpty) return;
+
     setState(() {
-      _messages.add({'sender': 'user', 'text': _controller.text});
-      _messages.add({'sender': 'bot', 'text': _generateDietResponse(_controller.text)});
+      _messages.add({'role': 'user', 'text': userMessage});
+      _controller.clear();
     });
-    _controller.clear();
+
+    String botReply = await _getChatbotReply(userMessage);
+
+    setState(() {
+      _messages.add({'role': 'bot', 'text': botReply});
+    });
   }
 
-  String _generateDietResponse(String query) {
-    query = query.toLowerCase();
-    if (query.contains("weight loss")) {
-      return "For weight loss, try a high-protein diet with plenty of vegetables and whole grains.";
-    } else if (query.contains("muscle gain")) {
-      return "For muscle gain, focus on lean proteins, complex carbs, and healthy fats.";
-    } else if (query.contains("healthy diet")) {
-      return "A balanced diet includes fruits, vegetables, lean proteins, and whole grains.";
+  Future<String> _getChatbotReply(String prompt) async {
+    final apiUrl =
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
+
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt}
+            ]
+          }
+        ]
+      }),
+    );
+
+    print('Request body: {"contents": [{"parts": [{"text": "$prompt"}]}]}');
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final reply = data['candidates'][0]['content']['parts'][0]['text'];
+      return reply.trim();
     } else {
-      return "I can help with diet plans! Ask about weight loss, muscle gain, or general healthy eating.";
+      return 'Sorry, something went wrong.';
     }
+  }
+
+  Widget _buildMessage(Map<String, String> message) {
+    bool isUser = message['role'] == 'user';
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        constraints: const BoxConstraints(maxWidth: 250),
+        decoration: BoxDecoration(
+          color: isUser ? Colors.white10 : Colors.grey[800],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          message['text']!,
+          style: TextStyle(
+            color: isUser ? Colors.white : Colors.grey[300],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Diet ChatBot")),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('wellness Chatbot'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                final message = _messages[index];
-                bool isUser = message['sender'] == 'user';
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUser ? Colors.blue : Colors.grey[800],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      message['text']!,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                );
+                return _buildMessage(_messages[index]);
               },
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            color: Colors.black,
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: "Ask about diet...",
-                      filled: true,
-                      fillColor: Colors.grey[900],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
                     ),
-                    style: TextStyle(color: Colors.white),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send, color: Colors.blue),
+                  icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: _sendMessage,
                 ),
               ],
@@ -90,7 +127,6 @@ class _DietChatBotScreenState extends State<DietChatBotScreen> {
           ),
         ],
       ),
-      backgroundColor: Colors.black,
     );
   }
 }

@@ -16,17 +16,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   User? user;
   String name = '';
   String email = '';
-  String profileImageUrl = ''; 
+  String profileImageUrl = '';
   String address = '';
   String phoneNumber = '';
   String education = '';
-  String feedbackMessage = '';
   bool isLoading = true;
 
-  final TextEditingController _feedbackController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _educationController = TextEditingController();
+  final TextEditingController _feedbackController = TextEditingController();
 
   @override
   void initState() {
@@ -45,22 +44,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           setState(() {
             name = userDoc.get('name') ?? 'No name';
             email = userDoc.get('email') ?? 'No email';
-            profileImageUrl = userDoc.get('profileImageUrl') ?? ''; 
+            profileImageUrl = userDoc.get('profileImageUrl') ?? '';
             address = userDoc.get('address') ?? '';
             phoneNumber = userDoc.get('phoneNumber') ?? '';
             education = userDoc.get('education') ?? '';
             isLoading = false;
           });
-        } else {
-          setState(() {
-            isLoading = false;
-          });
+
+          _addressController.text = address;
+          _phoneNumberController.text = phoneNumber;
+          _educationController.text = education;
         }
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
@@ -68,18 +65,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (user != null) {
       try {
         await _firestore.collection('users').doc(user!.uid).update({
-          'address': address,
-          'phoneNumber': phoneNumber,
-          'education': education,
+          'address': _addressController.text.trim(),
+          'phoneNumber': _phoneNumberController.text.trim(),
+          'education': _educationController.text.trim(),
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated successfully')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Profile updated successfully')));
       } catch (e) {
         print('Error updating user data: $e');
       }
     }
   }
 
-  Future<void> _submitFeedback() async {
+  Future<void> _submitFeedback(String feedbackMessage) async {
     if (user != null && feedbackMessage.isNotEmpty) {
       try {
         await _firestore.collection('feedback').add({
@@ -87,34 +85,96 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           'feedback': feedbackMessage,
           'timestamp': FieldValue.serverTimestamp(),
         });
+        Navigator.pop(context);
         _feedbackController.clear();
-        setState(() {
-          feedbackMessage = '';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feedback submitted successfully')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Feedback submitted successfully')));
       } catch (e) {
         print('Error submitting feedback: $e');
       }
     }
   }
 
+  void _openFeedbackModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Submit Feedback",
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: _feedbackController,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: "Type your feedback...",
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              ElevatedButton(
+                onPressed: () => _submitFeedback(_feedbackController.text),
+                child: const Text("Submit"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.black, foregroundColor: Colors.white),
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text("Profile"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.feedback_outlined),
+            onPressed: _openFeedbackModal,
+            tooltip: "Submit Feedback",
+          )
+        ],
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
                   _buildProfileHeader(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 25),
                   _buildProfileForm(),
-                  const SizedBox(height: 20),
-                  _buildFeedbackForm(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
                   _buildActionTile(Icons.logout, "Logout", () async {
                     await _auth.signOut();
                     Navigator.pop(context);
@@ -130,7 +190,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       children: [
         CircleAvatar(
           radius: 60,
-          backgroundColor: Colors.grey[200],
+          backgroundColor: Colors.white10,
           backgroundImage: profileImageUrl.isNotEmpty
               ? NetworkImage(profileImageUrl)
               : null,
@@ -141,18 +201,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         const SizedBox(height: 15),
         Text(
           name,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
         ),
         Text(
           email,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
       ],
     );
@@ -160,51 +213,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Widget _buildProfileForm() {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      elevation: 3,
+      color: Colors.white10,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField(
-              label: 'Address',
-              initialValue: address,
-              onChanged: (value) {
-                setState(() {
-                  address = value;
-                });
-              },
-            ),
-            _buildTextField(
-              label: 'Phone Number',
-              initialValue: phoneNumber,
-              onChanged: (value) {
-                setState(() {
-                  phoneNumber = value;
-                });
-              },
-            ),
-            _buildTextField(
-              label: 'Education',
-              initialValue: education,
-              onChanged: (value) {
-                setState(() {
-                  education = value;
-                });
-              },
-            ),
+            _buildTextField(label: "Address", controller: _addressController),
             const SizedBox(height: 15),
+            _buildTextField(label: "Phone Number", controller: _phoneNumberController),
+            const SizedBox(height: 15),
+            _buildTextField(label: "Education", controller: _educationController),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _updateUserData,
-              child: const Text('Update Profile'),
+              child: const Text("Update Profile"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
             ),
           ],
@@ -213,77 +240,36 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget _buildFeedbackForm() {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTextField(
-              label: 'Feedback',
-              initialValue: feedbackMessage,
-              onChanged: (value) {
-                setState(() {
-                  feedbackMessage = value;
-                });
-              },
-            ),
-            const SizedBox(height: 15),
-            ElevatedButton(
-              onPressed: _submitFeedback,
-              child: const Text('Submit Feedback'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-            ),
-          ],
+  Widget _buildTextField({required String label, required TextEditingController controller}) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.black26,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.white24),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.white),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required String initialValue,
-    required Function(String) onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextField(
-        controller: TextEditingController(text: initialValue),
-        onChanged: onChanged,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white),
-          border: const OutlineInputBorder(),
-          enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blue),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionTile(IconData icon, String title, VoidCallback onTap, {Color iconColor = Colors.black}) {
+  Widget _buildActionTile(IconData icon, String title, VoidCallback onTap,
+      {Color iconColor = Colors.white}) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      elevation: 3,
+      color: Colors.white10,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         leading: Icon(icon, color: iconColor),
-        title: Text(title, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
         onTap: onTap,
       ),
     );
