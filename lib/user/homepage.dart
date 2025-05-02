@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:wellness/user/chatbot.dart';
+import 'package:wellness/user/chatscreentrainer.dart';
 import 'package:wellness/user/dashboard.dart';
 import 'package:wellness/user/diary.dart';
+import 'package:wellness/user/plans.dart';
 import 'package:wellness/user/profilemanagment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:wellness/user/reelview.dart';
@@ -39,7 +41,7 @@ class _HomePageState extends State<HomePage> {
     const CalorieSliderScreen(),
     const DiaryPage(),
     const ReelViewer(), // Reel page (video won't autoplay when switching tabs)
-    const Center(child: Text('Plans', style: TextStyle(fontSize: 20, color: Colors.white))),
+    const RecipeScreen(),
     UserProfileScreen(), // Profile page
   ];
 
@@ -68,17 +70,34 @@ class _HomePageState extends State<HomePage> {
         },
       ),
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Wellness', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              // Add notification action here if needed
-            },
-          ),
-        ],
-      ),
+  backgroundColor: Colors.black,
+  title: const Text(
+    'Wellness',
+    style: TextStyle(
+      color: Colors.white,
+      fontSize: 24,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.chat, color: Colors.white),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ChatScreenuser(userId:FirebaseAuth.instance.currentUser!.uid)),
+        );
+      },
+    ),
+    IconButton(
+      icon: const Icon(Icons.notifications, color: Colors.white),
+      onPressed: () {
+        // Add notification action here if needed
+      },
+    ),
+  ],
+),
+
       body: PageView(
         controller: _pageController,
         children: _pages,

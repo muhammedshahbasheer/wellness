@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:wellness/trainer/clients.dart';
 import 'package:wellness/trainer/reel.dart';
-
-
+import 'package:wellness/trainer/chatuser.dart'; // Import AssignedMessagesScreen
 
 class TrainerHomePage extends StatelessWidget {
   const TrainerHomePage({super.key});
@@ -21,9 +21,31 @@ class TrainerHomePage extends StatelessWidget {
           mainAxisSpacing: 16,
           children: [
             _buildDashboardCard(context, Icons.fitness_center, 'Workouts', Colors.blue),
-            _buildDashboardCard(context, Icons.person, 'Clients', Colors.green),
+            _buildDashboardCard(
+              context,
+              Icons.person,
+              'Clients',
+              Colors.green,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AssignedUsersScreen()),
+                );
+              },
+            ),
             _buildDashboardCard(context, Icons.schedule, 'Schedule', Colors.orange),
-            _buildDashboardCard(context, Icons.chat, 'Messages', Colors.purple),
+            _buildDashboardCard(
+              context,
+              Icons.chat,
+              'Messages',
+              Colors.purple,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AssignedMessagesScreen()),
+                );
+              },
+            ),
             _buildDashboardCard(context, Icons.video_library, 'Reels', Colors.red, isReels: true),
           ],
         ),
@@ -31,17 +53,25 @@ class TrainerHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildDashboardCard(BuildContext context, IconData icon, String title, Color color, {bool isReels = false}) {
+  Widget _buildDashboardCard(
+    BuildContext context,
+    IconData icon,
+    String title,
+    Color color, {
+    bool isReels = false,
+    void Function()? onTap,
+  }) {
     return GestureDetector(
-      onTap: () {
-        if (isReels) {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const UploadReelPage()));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$title clicked!')),
-          );
-        }
-      },
+      onTap: onTap ??
+          () {
+            if (isReels) {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const UploadReelPage()));
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('$title clicked!')),
+              );
+            }
+          },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         color: color,
