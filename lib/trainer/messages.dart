@@ -21,7 +21,7 @@ class _ChatScreenState extends State<ChatScreentrainer> {
   String getChatId() {
     return trainerId.hashCode <= widget.userId.hashCode
         ? '${trainerId}_${widget.userId}'
-        : '${widget.userId}_${trainerId}';
+        : '${widget.userId}_$trainerId';
   }
 
   // Function to send a message to Firestore

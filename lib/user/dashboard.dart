@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:wellness/user/chatscreentrainer.dart';
 
 class CalorieSliderScreen extends StatefulWidget {
   const CalorieSliderScreen({super.key});
@@ -19,11 +21,34 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Calorie Tracker', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.black,
-        elevation: 0,
-      ),
+     appBar: AppBar(
+  backgroundColor: Colors.black,
+  title: const Text(
+    'Wellness',
+    style: TextStyle(
+      color: Colors.white,
+      fontSize: 24,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.chat, color: Colors.white),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ChatScreenuser(userId:FirebaseAuth.instance.currentUser!.uid)),
+        );
+      },
+    ),
+    IconButton(
+      icon: const Icon(Icons.notifications, color: Colors.white),
+      onPressed: () {
+        // Add notification action here if needed
+      },
+    ),
+  ],
+),
       body: SingleChildScrollView(
         child: Column(
           children: [

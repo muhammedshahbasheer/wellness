@@ -174,7 +174,7 @@ class _TrainerDetailPageState extends State<TrainerDetailPage> {
       child: const Text('Unassign'),
     ),
   );
-}).toList(),
+}),
 
                     const SizedBox(height: 20),
                     const Text(
@@ -202,7 +202,7 @@ class _TrainerDetailPageState extends State<TrainerDetailPage> {
                             );
                           },
                         );
-                      }).toList(),
+                      }),
                   ],
                 ),
               ),

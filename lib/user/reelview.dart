@@ -12,7 +12,7 @@ class ReelViewer extends StatefulWidget {
 class _ReelViewerState extends State<ReelViewer> {
   final PageController _pageController = PageController();
   List<String> _reelLinks = [];
-  List<VideoPlayerController> _controllers = [];
+  final List<VideoPlayerController> _controllers = [];
   bool isLoading = true;
   int _currentPage = 0;
 

@@ -164,6 +164,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             tooltip: "Submit Feedback",
           )
         ],
+        automaticallyImplyLeading: false
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
