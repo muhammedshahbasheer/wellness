@@ -333,6 +333,7 @@ class _DiaryPageState extends State<DiaryPage> {
             ),
           ),
         ),
+        automaticallyImplyLeading: false
       ),
       backgroundColor: Colors.black,
       body: _activities.isEmpty
