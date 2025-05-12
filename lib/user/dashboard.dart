@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:wellness/user/chatbot.dart';
 import 'package:wellness/user/chatscreentrainer.dart';
 
 class CalorieSliderScreen extends StatefulWidget {
@@ -15,43 +20,186 @@ class CalorieSliderScreen extends StatefulWidget {
 class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
-  double bmiValue = 44.0; // Example BMI value
+  double bmiValue = 0.0;
+  double userHeight = 1.75;
+  List<FlSpot> weightSpots = [];
+  String dailyQuote = "Loading quote...";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLatestBMI();
+    _fetchWeightHistory();
+    _generateMindFreshQuote();
+  }
+
+  Future<void> _fetchLatestBMI() async {
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('bmi')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      setState(() {
+        bmiValue = snapshot.docs.first['bmi'];
+      });
+    }
+  }
+
+  Future<void> _fetchWeightHistory() async {
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('bmi')
+        .orderBy('timestamp')
+        .get();
+
+    List<FlSpot> spots = [];
+    for (int i = 0; i < snapshot.docs.length; i++) {
+      double weight = snapshot.docs[i]['weight'];
+      spots.add(FlSpot(i.toDouble(), weight));
+    }
+    setState(() {
+      weightSpots = spots;
+    });
+  }
+
+  void _showWeightInputDialog() {
+    TextEditingController weightController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Enter Today's Weight (kg)"),
+        content: TextField(
+          controller: weightController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(hintText: "e.g. 70.5"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              double weight = double.tryParse(weightController.text) ?? 0;
+              if (weight <= 0) return;
+
+              double bmi = weight / (userHeight * userHeight);
+              setState(() {
+                bmiValue = bmi;
+              });
+
+              await _saveBMI(weight, bmi);
+              await _fetchWeightHistory();
+            },
+            child: const Text("Submit"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveBMI(double weight, double bmi) async {
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('bmi')
+        .add({
+      'weight': weight,
+      'bmi': bmi,
+      'timestamp': Timestamp.now(),
+    });
+  }
+
+  Future<void> _generateMindFreshQuote() async {
+    try {
+      final response = await http.post(
+        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDK5rpV9edFjGgxvW4Iqulp7xG3Pew0lSU"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {"text": "Give me a short and powerful motivational quote related to fitness, health, or working out. Keep it under 20 words."}
+              ]
+            }
+          ]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final quote = data['candidates'][0]['content']['parts'][0]['text'];
+        setState(() {
+          dailyQuote = quote;
+        });
+      } else {
+        print("API Error: ${response.body}");
+        setState(() {
+          dailyQuote = "Failed to load quote.";
+        });
+      }
+    } catch (e) {
+      print("Exception: $e");
+      setState(() {
+        dailyQuote = "Error fetching quote.";
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-     appBar: AppBar(
-  backgroundColor: Colors.black,
-  title: const Text(
-    'Wellness',
-    style: TextStyle(
-      color: Colors.white,
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.chat, color: Colors.white),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ChatScreenuser(userId:FirebaseAuth.instance.currentUser!.uid)),
-        );
-      },
-    ),
-    IconButton(
-      icon: const Icon(Icons.notifications, color: Colors.white),
-      onPressed: () {
-        // Add notification action here if needed
-      },
-    ),
-  ],
-),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text('Wellness', style: TextStyle(color: Colors.white)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreenuser(userId: FirebaseAuth.instance.currentUser!.uid),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[850],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: GestureDetector(
+  onTap: _generateMindFreshQuote,
+  child: Text(
+    dailyQuote,
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 16,
+      fontStyle: FontStyle.italic,
+      decoration: TextDecoration.underline,
+    ),
+  ),
+),
+
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) {
@@ -85,6 +233,7 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            chatWithAICard(),
             _bmiSection(),
           ],
         ),
@@ -92,29 +241,21 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
     );
   }
 
-  Widget _caloriePage() {
-    return _dashboardCard(
-      title: "Calorie Intake",
-      subtitle: "Track your daily calorie consumption.",
-      buttonText: "View Details",
-    );
-  }
+  Widget _caloriePage() => _dashboardCard(
+        title: "Calorie Intake",
+        subtitle: "Track your daily calorie consumption.",
+        buttonText: "View Details",
+      );
 
-  Widget _weekReviewPage() {
-    return _dashboardCard(
-      title: "Week Review",
-      subtitle: "Analyze your weekly health trends.",
-      buttonText: "Check Insights",
-    );
-  }
+  Widget _weekReviewPage() => _dashboardCard(
+        title: "Week Review",
+        subtitle: "Analyze your weekly health trends.",
+        buttonText: "Check Insights",
+      );
 
-  Widget _weightProgressPage() {
-    return _chartCard("Weight Progress", Colors.blue);
-  }
+  Widget _weightProgressPage() => _chartCard("Weight Progress", Colors.blue);
 
-  Widget _sleepTrackerPage() {
-    return _chartCard("Sleep Hours", Colors.purple);
-  }
+  Widget _sleepTrackerPage() => _chartCard("Sleep Hours", Colors.purple);
 
   Widget _bmiSection() {
     return Padding(
@@ -125,9 +266,20 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("BMI Indicator", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  const Text(
+                    "BMI Indicator",
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    onPressed: _showWeightInputDialog,
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               SizedBox(height: 300, child: BMIIndicator(bmi: bmiValue)),
             ],
@@ -150,32 +302,30 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
             children: [
               Text(title, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              SizedBox(height: 300, child: _buildChart(title, color)),
+              SizedBox(
+                height: 250,
+                child: title == "Weight Progress"
+                    ? LineChart(
+                        LineChartData(
+                          gridData: FlGridData(show: false),
+                          titlesData: FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: weightSpots,
+                              isCurved: true,
+                              color: color,
+                              dotData: FlDotData(show: true),
+                              belowBarData: BarAreaData(show: false),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const Center(child: Text("No Data", style: TextStyle(color: Colors.white))),
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildChart(String title, Color color) {
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(show: false),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: [
-              FlSpot(0, 2), FlSpot(1, 2.5), FlSpot(2, 3), FlSpot(3, 3.5),
-              FlSpot(4, 4), FlSpot(5, 3.8), FlSpot(6, 4.2)
-            ],
-            isCurved: true,
-            color: color,
-            dotData: FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
-          ),
-        ],
       ),
     );
   }
@@ -206,6 +356,44 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
       ),
     );
   }
+
+  Widget chatWithAICard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatScreen()),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.smart_toy_outlined, color: Colors.green, size: 32),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text("Chat with AI", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 4),
+                    Text("Ask anything about health, fitness, or diet.", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class BMIIndicator extends StatelessWidget {
@@ -229,7 +417,7 @@ class BMIIndicator extends StatelessWidget {
             ],
             pointers: <GaugePointer>[NeedlePointer(value: bmi)],
             annotations: <GaugeAnnotation>[
-              GaugeAnnotation(positionFactor: 0.5, widget: Text(bmi.toStringAsFixed(1), style: TextStyle(color: Colors.white, fontSize: 18))),
+              GaugeAnnotation(positionFactor: 0.5, widget: Text(bmi.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 18))),
             ],
           ),
         ],

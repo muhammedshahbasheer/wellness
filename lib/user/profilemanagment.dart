@@ -20,12 +20,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   String address = '';
   String phoneNumber = '';
   String education = '';
+  String height = '';
   bool isLoading = true;
 
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _educationController = TextEditingController();
   final TextEditingController _feedbackController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
 
   @override
   void initState() {
@@ -48,12 +50,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             address = userDoc.get('address') ?? '';
             phoneNumber = userDoc.get('phoneNumber') ?? '';
             education = userDoc.get('education') ?? '';
+            height = userDoc.get('height') ?? '';
             isLoading = false;
           });
 
           _addressController.text = address;
           _phoneNumberController.text = phoneNumber;
           _educationController.text = education;
+          _heightController.text = height;
         }
       }
     } catch (e) {
@@ -68,6 +72,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           'address': _addressController.text.trim(),
           'phoneNumber': _phoneNumberController.text.trim(),
           'education': _educationController.text.trim(),
+          'height': _heightController.text.trim(),
         });
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Profile updated successfully')));
@@ -150,6 +155,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   @override
+  void dispose() {
+    _addressController.dispose();
+    _phoneNumberController.dispose();
+    _educationController.dispose();
+    _feedbackController.dispose();
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
@@ -225,6 +240,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             _buildTextField(label: "Phone Number", controller: _phoneNumberController),
             const SizedBox(height: 15),
             _buildTextField(label: "Education", controller: _educationController),
+            const SizedBox(height: 15),
+            _buildTextField(label: "Height (in cm)", controller: _heightController),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _updateUserData,

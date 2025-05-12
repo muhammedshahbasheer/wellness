@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.black,
       floatingActionButton: FloatingActionButton(
         child: const Icon(
-          Icons.support_agent,
+          Icons.camera_alt_outlined,
           color: Colors.blue,
           size: 50,
         ),

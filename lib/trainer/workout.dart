@@ -46,7 +46,6 @@ class _AssignedMessagesScreenState extends State<AssignedMessagesScreen> {
             .collection('Messages')
             .where('senderId', isEqualTo: userId)
             .where('receiverId', isEqualTo: trainerId)
-            .where('isRead', isEqualTo: false)
             .get();
 
         results.add({
