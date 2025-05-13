@@ -9,6 +9,7 @@ import 'package:wellness/user/plans.dart';
 import 'package:wellness/user/profilemanagment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:wellness/user/reelview.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,10 +37,24 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+ void _onFabPressed() async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/start-rep-counter'),
+    );
+    if (response.statusCode == 200) {
+      print("✅ Rep counter started!");
+    } else {
+      print("❌ Failed to start rep counter.");
+    }
+  } catch (e) {
+    print("❌ Error connecting to rep counter API: $e");
+  }
+}
 
   // List of pages
   final List<Widget> _pages = [
-    const CalorieSliderScreen(),
+     CalorieSliderScreen(),
     const DiaryPage(),
     const ReelViewer(), // Reel page (video won't autoplay when switching tabs)
     const PlansAndRecipesLauncher(),
@@ -66,8 +81,9 @@ class _HomePageState extends State<HomePage> {
           size: 50,
         ),
         onPressed: () {
-          Navigator.push(context,
-          MaterialPageRoute(builder : (context) => ChatScreen()));
+        _onFabPressed();
+ 
+
         },
       ),
       

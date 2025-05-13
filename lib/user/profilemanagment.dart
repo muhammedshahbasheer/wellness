@@ -21,6 +21,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   String phoneNumber = '';
   String education = '';
   String height = '';
+  String gender = '';  // Added gender variable
   bool isLoading = true;
 
   final TextEditingController _addressController = TextEditingController();
@@ -28,6 +29,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   final TextEditingController _educationController = TextEditingController();
   final TextEditingController _feedbackController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
+  String _selectedGender = 'Male';  // Default gender selection
 
   @override
   void initState() {
@@ -43,25 +45,33 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             await _firestore.collection('users').doc(user!.uid).get();
 
         if (userDoc.exists) {
-          setState(() {
-            name = userDoc.get('name') ?? 'No name';
-            email = userDoc.get('email') ?? 'No email';
-            profileImageUrl = userDoc.get('profileImageUrl') ?? '';
-            address = userDoc.get('address') ?? '';
-            phoneNumber = userDoc.get('phoneNumber') ?? '';
-            education = userDoc.get('education') ?? '';
-            height = userDoc.get('height') ?? '';
-            isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              name = userDoc.get('name') ?? 'No name';
+              email = userDoc.get('email') ?? 'No email';
+              profileImageUrl = userDoc.get('profileImageUrl') ?? '';
+              address = userDoc.get('address') ?? '';
+              phoneNumber = userDoc.get('phoneNumber') ?? '';
+              education = userDoc.get('education') ?? '';
+              height = userDoc.get('height') ?? '';
+              gender = userDoc.get('gender') ?? 'Male';  // Fetch gender
+              isLoading = false;
+            });
 
-          _addressController.text = address;
-          _phoneNumberController.text = phoneNumber;
-          _educationController.text = education;
-          _heightController.text = height;
+            // Set controllers to fetched values
+            _addressController.text = address;
+            _phoneNumberController.text = phoneNumber;
+            _educationController.text = education;
+            _heightController.text = height;
+            _selectedGender = gender;  // Set selected gender
+          }
         }
       }
     } catch (e) {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+      print('Error loading user data: $e');
     }
   }
 
@@ -73,6 +83,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           'phoneNumber': _phoneNumberController.text.trim(),
           'education': _educationController.text.trim(),
           'height': _heightController.text.trim(),
+          'gender': _selectedGender,  // Save selected gender
         });
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Profile updated successfully')));
@@ -242,6 +253,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             _buildTextField(label: "Education", controller: _educationController),
             const SizedBox(height: 15),
             _buildTextField(label: "Height (in cm)", controller: _heightController),
+            const SizedBox(height: 15),
+            _buildGenderDropdown(), // Gender Dropdown added here
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _updateUserData,
@@ -277,6 +290,27 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
+    );
+  }
+
+  Widget _buildGenderDropdown() {
+    return DropdownButton<String>(
+      value: _selectedGender,
+      onChanged: (String? newGender) {
+        setState(() {
+          _selectedGender = newGender!;
+        });
+      },
+      items: <String>['Male', 'Female', 'Other']
+          .map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value, style: const TextStyle(color: Colors.white)),
+        );
+      }).toList(),
+      dropdownColor: Colors.black,
+      iconEnabledColor: Colors.white,
+      style: const TextStyle(color: Colors.white),
     );
   }
 
