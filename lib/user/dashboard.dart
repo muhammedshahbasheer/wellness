@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:wellness/user/chatbot.dart';
 import 'package:wellness/user/chatscreentrainer.dart';
+import 'package:wellness/user/caloriedetailscreen.dart';
 
 class CalorieSliderScreen extends StatefulWidget {
   const CalorieSliderScreen({super.key});
@@ -241,11 +242,35 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
     );
   }
 
-  Widget _caloriePage() => _dashboardCard(
-        title: "Calorie Intake",
-        subtitle: "Track your daily calorie consumption.",
-        buttonText: "View Details",
-      );
+ Widget _caloriePage() => Padding(
+  padding: const EdgeInsets.all(16.0),
+  child: Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.grey[900],
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Calorie Intake", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const Text("Track your daily calorie consumption.", style: TextStyle(color: Colors.grey, fontSize: 14)),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CalorieDetailScreen()),
+            );
+          },
+          style: TextButton.styleFrom(foregroundColor: Colors.blue),
+          child: const Text("View Details"),
+        ),
+      ],
+    ),
+  ),
+);
 
   Widget _weekReviewPage() => _dashboardCard(
         title: "Week Review",

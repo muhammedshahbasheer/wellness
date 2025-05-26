@@ -4,7 +4,6 @@ import 'package:wellness/firebase_options.dart';
 import 'package:wellness/loginpage.dart';
 import 'package:wellness/splashscreen.dart';
 import 'package:wellness/trainer/registationtrainer.dart';
-import 'package:wellness/loginpage.dart';
 import 'package:wellness/user/registrationuser.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
