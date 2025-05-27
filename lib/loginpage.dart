@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:wellness/admin/adminhome.dart';
+import 'package:wellness/forgotpassword.dart';
 import 'package:wellness/trainer/trainerhomepage.dart';
 import 'package:wellness/user/homepage.dart';
 import 'package:wellness/user/registrationuser.dart';
@@ -175,6 +176,9 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
+                              TextButton(onPressed: (){Navigator.push(context, 
+                              MaterialPageRoute(builder: (context)=>ForgotPasswordScreen()));},
+                               child: Text("Forgot Password?", style: TextStyle(color: const Color.fromARGB(255, 166, 166, 166)))),
                       ],
                     ),
                   ),
