@@ -37,7 +37,6 @@ class _CalorieDetailScreenState extends State<CalorieDetailScreen> {
   final TextEditingController calorieController = TextEditingController();
   String selectedMeal = 'Breakfast';
 
-  // --- Added for midnight refresh ---
   DateTime _lastCheckedDay = DateTime.now();
   late Timer _midnightTimer;
   StreamSubscription? _calorieSubscription;
@@ -82,7 +81,7 @@ class _CalorieDetailScreenState extends State<CalorieDetailScreen> {
           height = double.tryParse(data['height'].toString()) ?? 170;
           weight = double.tryParse(data['weight'].toString()) ?? 65;
           gender = (data['gender'] ?? 'male').toLowerCase();
-          age = int.tryParse(data['age'].toString()) ?? 25; // load age if exists
+          age = int.tryParse(data['age'].toString()) ?? 25;
           _calculateCalories();
         });
       }
@@ -187,6 +186,10 @@ class _CalorieDetailScreenState extends State<CalorieDetailScreen> {
     return mealCalories.values.fold(0, (sum, item) => sum + item);
   }
 
+  double get caloriesToBurn {
+    return tdee - totalIntake;
+  }
+
   @override
   void dispose() {
     _midnightTimer.cancel();
@@ -234,10 +237,10 @@ class _CalorieDetailScreenState extends State<CalorieDetailScreen> {
                       style: const TextStyle(
                           color: Colors.lightBlueAccent, fontSize: 16)),
                   const SizedBox(height: 10),
-                  const Text("Goal: 2000 kcal",
-                      style:
-                          TextStyle(color: Colors.greenAccent, fontSize: 16)),
-                  const SizedBox(height: 30),
+                  // const Text("Goal: 2000 kcal",
+                  //     style:
+                  //         TextStyle(color: Colors.greenAccent, fontSize: 16)),
+                  // const SizedBox(height: 30),
                   const Text("Activity Level:",
                       style: TextStyle(
                           color: Colors.white,
@@ -263,9 +266,15 @@ class _CalorieDetailScreenState extends State<CalorieDetailScreen> {
                     },
                   ),
                   const SizedBox(height: 30),
-                  Text("Calories Needed to Burn: ${tdee.toStringAsFixed(0)} kcal",
-                      style: const TextStyle(
-                          color: Colors.redAccent, fontSize: 16)),
+                  Text(
+                    caloriesToBurn > 0
+                        ? "Calories Needed to Burn: ${caloriesToBurn.toStringAsFixed(0)} kcal"
+                        : "You've exceeded your calorie needs by ${(-caloriesToBurn).toStringAsFixed(0)} kcal",
+                    style: TextStyle(
+                      color: caloriesToBurn > 0 ? Colors.redAccent : Colors.greenAccent,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 30),
                   const Text("Tip:",
                       style: TextStyle(
