@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ChatScreenuser extends StatefulWidget {
   const ChatScreenuser({Key? key, required String userId}) : super(key: key);
@@ -75,86 +76,234 @@ class _ChatScreenuserState extends State<ChatScreenuser> {
     _messageController.clear();
   }
 
+  String formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    DateTime dateTime = timestamp.toDate();
+    return DateFormat('hh:mm a').format(dateTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatId = getChatId();
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(trainerName.isNotEmpty ? trainerName : 'Chat'),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : Column(
-              children: [
-                Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('chats')
-                        .doc(chatId)
-                        .collection('messages')
-                        .orderBy('timestamp', descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator(color: Colors.white));
-                      }
+      // Gradient background for the entire screen
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1E1E2C), Color(0xFF323244)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom AppBar
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.6),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.blueGrey,
+                      child: Text(
+                        trainerName.isNotEmpty
+                            ? trainerName[0].toUpperCase()
+                            : 'T',
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        trainerName.isNotEmpty ? trainerName : 'Chat',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                      final messages = snapshot.data!.docs;
+              Expanded(
+                child: isLoading
+                    ? const Center(
+                        child:
+                            CircularProgressIndicator(color: Colors.white),
+                      )
+                    : StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('chats')
+                            .doc(chatId)
+                            .collection('messages')
+                            .orderBy('timestamp', descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const Center(
+                                child: CircularProgressIndicator(
+                                    color: Colors.white));
+                          }
 
-                      return ListView.builder(
-                        reverse: true,
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = messages[index];
-                          final isUser = msg['senderId'] == userId;
+                          final messages = snapshot.data!.docs;
 
-                          return Container(
-                            alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isUser ? Colors.blueGrey[700] : Colors.white10,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              msg['text'],
-                              style: const TextStyle(color: Colors.white),
-                            ),
+                          return ListView.builder(
+                            reverse: true,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              final msg = messages[index];
+                              final isUser = msg['senderId'] == userId;
+
+                              return Align(
+                                alignment: isUser
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 6),
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.of(context).size.width * 0.75,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: isUser
+                                          ? [
+                                              Colors.blueGrey.shade700,
+                                              Colors.blueGrey.shade900
+                                            ]
+                                          : [
+                                              Colors.grey.shade800,
+                                              Colors.grey.shade700,
+                                            ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.4),
+                                        offset: const Offset(2, 2),
+                                        blurRadius: 4,
+                                      )
+                                    ],
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(20),
+                                      topRight: const Radius.circular(20),
+                                      bottomLeft: Radius.circular(isUser ? 20 : 4),
+                                      bottomRight: Radius.circular(isUser ? 4 : 20),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        msg['text'],
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Text(
+                                          formatTimestamp(msg['timestamp']),
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 10,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
-                  ),
+                      ),
+              ),
+
+              // Message input area with rounded container and shadow
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.7),
+                      blurRadius: 6,
+                      offset: const Offset(0, -3),
+                    )
+                  ],
                 ),
-                const Divider(color: Colors.white24, height: 1),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: SafeArea(
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            hintText: 'Type a message...',
-                            hintStyle: TextStyle(color: Colors.white54),
-                            border: InputBorder.none,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade900,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: TextField(
+                            controller: _messageController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              hintText: 'Type a message...',
+                              hintStyle: TextStyle(color: Colors.white54),
+                              border: InputBorder.none,
+                            ),
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => sendMessage(),
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send, color: Colors.white),
-                        onPressed: sendMessage,
+                      const SizedBox(width: 12),
+                      Material(
+                        color: Colors.blueGrey[700],
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          icon: const Icon(Icons.send, color: Colors.white),
+                          onPressed: sendMessage,
+                          splashRadius: 24,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
