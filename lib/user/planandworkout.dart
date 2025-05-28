@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wellness/user/plans.dart';
+import 'package:wellness/user/userworkoutplan.dart';
 
 class PlansAndRecipesLauncher extends StatelessWidget {
   const PlansAndRecipesLauncher({Key? key}) : super(key: key);
@@ -24,25 +25,11 @@ automaticallyImplyLeading: false
         ),
         body: const TabBarView(
           children: [
-            PlansPage(),
+            UserWorkoutPlanPage(),
             RecipeScreen(),
           ],
         ),
         backgroundColor: Colors.black,
-      ),
-    );
-  }
-}
-
-class PlansPage extends StatelessWidget {
-  const PlansPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Your workout & diet plans will appear here.',
-        style: TextStyle(color: Colors.white, fontSize: 16),
       ),
     );
   }

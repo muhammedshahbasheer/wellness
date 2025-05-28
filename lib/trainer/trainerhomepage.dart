@@ -4,7 +4,8 @@ import 'package:wellness/trainer/profile.dart';
 import 'package:wellness/trainer/reel.dart';
 import 'package:wellness/trainer/schedule.dart';
 import 'package:wellness/trainer/workout.dart';
-import 'package:wellness/trainer/messages.dart'; // Assuming this is the correct import
+import 'package:wellness/trainer/messages.dart';
+import 'package:wellness/trainer/workoutplan.dart'; // Assuming this is the correct import
  // Your trainer profile screen
 
 class TrainerHomePage extends StatefulWidget {
@@ -18,7 +19,7 @@ class _TrainerHomePageState extends State<TrainerHomePage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = const [
-    //DailyWorkoutPlanPage(),
+    AssignWorkoutPlanPage(),
     AssignedUsersScreen(),
     //SchedulePage(),
     AssignedMessagesScreen(),
