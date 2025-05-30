@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:wellness/user/chatbot.dart';
 import 'package:wellness/user/chatscreentrainer.dart';
 import 'package:wellness/user/caloriedetailscreen.dart';
+import 'package:wellness/user/exersiseapi.dart';
 
 class CalorieSliderScreen extends StatefulWidget {
   const CalorieSliderScreen({super.key});
@@ -24,6 +25,7 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
   double bmiValue = 0.0;
   double userHeight = 1.75;
   List<FlSpot> weightSpots = [];
+  List<FlSpot> sleepSpots = [];  
   String dailyQuote = "Loading quote...";
 
   @override
@@ -32,6 +34,7 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
     _fetchLatestBMI();
     _fetchWeightHistory();
     _generateMindFreshQuote();
+    _fetchSleepHistory();
   }
 
   Future<void> _fetchLatestBMI() async {
@@ -69,6 +72,46 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
       weightSpots = spots;
     });
   }
+ Future<void> _fetchSleepHistory() async {
+  String uid = FirebaseAuth.instance.currentUser!.uid;
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection('Diary')
+      .doc(uid)
+      .collection('Entries')
+      .orderBy('timestamp')
+      .get();
+
+  List<FlSpot> spots = [];
+
+  for (int i = 0; i < snapshot.docs.length; i++) {
+    final doc = snapshot.docs[i];
+    final data = doc.data();
+
+    // ✅ Try converting from string to double
+    if (data.containsKey('sleepHours') && data['sleepHours'] != null) {
+      String rawValue = data['sleepHours'].toString();
+      double? sleepHour = double.tryParse(rawValue);
+
+      if (sleepHour != null && sleepHour > 0) {
+        spots.add(FlSpot(i.toDouble(), sleepHour));
+      } else {
+        print("Invalid sleepHour: $rawValue");
+      }
+    } else {
+      print("Missing sleepHours in doc ${doc.id}");
+    }
+  }
+
+  setState(() {
+    sleepSpots = spots;
+    print("Sleep data points: $sleepSpots");
+  });
+}
+
+
+
+
 
   void _showWeightInputDialog() {
     TextEditingController weightController = TextEditingController();
@@ -272,11 +315,20 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
   ),
 );
 
-  Widget _weekReviewPage() => _dashboardCard(
-        title: "Week Review",
-        subtitle: "Analyze your weekly health trends.",
-        buttonText: "Check Insights",
-      );
+  Widget _weekReviewPage() => GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ExerciseListScreen()),
+    );
+  },
+  child: _dashboardCard(
+    title: "Week Review",
+    subtitle: "Analyze your weekly health trends.",
+    buttonText: "Check Insights",
+  ),
+);
+
 
   Widget _weightProgressPage() => _chartCard("Weight Progress", Colors.blue);
 
@@ -314,46 +366,50 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
     );
   }
 
-  Widget _chartCard(String title, Color color) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Card(
-        color: Colors.grey[900],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 250,
-                child: title == "Weight Progress"
-                    ? LineChart(
-                        LineChartData(
-                          gridData: FlGridData(show: false),
-                          titlesData: FlTitlesData(show: false),
-                          borderData: FlBorderData(show: false),
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: weightSpots,
-                              isCurved: true,
-                              color: color,
-                              dotData: FlDotData(show: true),
-                              belowBarData: BarAreaData(show: false),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const Center(child: Text("No Data", style: TextStyle(color: Colors.white))),
-              ),
-            ],
-          ),
+ Widget _chartCard(String title, Color color) {
+  final List<FlSpot> spots = title == "Weight Progress" ? weightSpots :
+                             title == "Sleep Hours" ? sleepSpots : [];
+
+  return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Card(
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 250,
+              child: spots.isNotEmpty
+                  ? LineChart(
+                      LineChartData(
+                        gridData: FlGridData(show: false),
+                        titlesData: FlTitlesData(show: false),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: spots,
+                            isCurved: true,
+                            color: color,
+                            dotData: FlDotData(show: true),
+                            belowBarData: BarAreaData(show: false),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const Center(child: Text("No Data", style: TextStyle(color: Colors.white))),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _dashboardCard({required String title, required String subtitle, required String buttonText}) {
     return Padding(
@@ -376,7 +432,7 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
               style: TextButton.styleFrom(foregroundColor: Colors.blue),
               child: Text(buttonText),
             ),
-          ],
+          ]
         ),
       ),
     );
