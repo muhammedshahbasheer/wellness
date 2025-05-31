@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wellness/trainer/clients.dart';
 import 'package:wellness/trainer/profile.dart';
+import 'package:wellness/trainer/progressmonitoring.dart';
 import 'package:wellness/trainer/reel.dart';
 import 'package:wellness/trainer/schedule.dart';
 import 'package:wellness/trainer/workout.dart';
@@ -21,7 +22,7 @@ class _TrainerHomePageState extends State<TrainerHomePage> {
   final List<Widget> _pages = const [
     AssignWorkoutPlanPage(),
     AssignedUsersScreen(),
-    //SchedulePage(),
+    WorkoutProgressScreen(),
     AssignedMessagesScreen(),
     TrainerProfileScreen(),
   ];
