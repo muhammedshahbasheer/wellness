@@ -44,33 +44,29 @@ class _TrainerHomePageState extends State<TrainerHomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(child: _pages[_selectedIndex]),
-      floatingActionButton: _buildReelButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.grey,
-          currentIndex: _selectedIndex,
-          onTap: _onNavTapped,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Workouts'),
-            BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Clients'),
-            BottomNavigationBarItem(icon: Icon(Icons.schedule), label: 'Schedule'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Messages'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
-        ),
-      ),
-    );
-  }
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,
+    body: SafeArea(child: _pages[_selectedIndex]),
+    floatingActionButton: _buildReelButton(),
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    bottomNavigationBar: BottomNavigationBar(
+      backgroundColor: Colors.white,
+      selectedItemColor: Colors.black,
+      unselectedItemColor: Colors.grey,
+      currentIndex: _selectedIndex,
+      onTap: _onNavTapped,
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Workouts'),
+        BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Clients'),
+       BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Progress'),
+        BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Messages'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ],
+    ),
+  );
+}
+
 }

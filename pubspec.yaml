@@ -49,6 +49,8 @@ dependencies:
   flutter_dotenv: ^5.2.1
   transparent_image: ^2.0.0
   syncfusion_flutter_charts: ^28.2.12
+  libphonenumber_plugin: ^0.3.3
+
 
 dev_dependencies:
   flutter_test:

@@ -56,11 +56,15 @@ class _UserWorkoutPlanPageState extends State<UserWorkoutPlanPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : workoutPlans.isEmpty
-              ? const Center(child: Text('No workout plans assigned.', style: TextStyle(color: Colors.white)))
+              ? const Center(
+                  child: Text('No workout plans assigned.', style: TextStyle(color: Colors.white)),
+                )
               : ListView.builder(
                   itemCount: workoutPlans.length,
                   itemBuilder: (context, index) {
                     final plan = workoutPlans[index];
+                    final diet = plan['dietPlan'] ?? {};
+
                     return Card(
                       color: Colors.grey[900],
                       margin: const EdgeInsets.all(12),
@@ -72,19 +76,56 @@ class _UserWorkoutPlanPageState extends State<UserWorkoutPlanPage> {
                           children: [
                             Text(
                               'Date: ${formatDate(plan['date'])}',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Exercises: ${plan['exercises'].join(', ')}',
+                              'Exercises: ${plan['exercises']?.join(', ') ?? '-'}',
                               style: const TextStyle(color: Colors.white),
                             ),
                             const SizedBox(height: 6),
-                            Text('Reps: ${plan['reps']}', style: const TextStyle(color: Colors.white)),
+                            Text(
+                              'Reps: ${plan['reps']}',
+                              style: const TextStyle(color: Colors.white),
+                            ),
                             const SizedBox(height: 6),
-                            Text('Calorie Goal: ${plan['calories']} kcal', style: const TextStyle(color: Colors.white)),
+                            Text(
+                              'Calorie Goal: ${plan['calories']} kcal',
+                              style: const TextStyle(color: Colors.white),
+                            ),
                             const SizedBox(height: 6),
-                            Text('TDEE Type: ${plan['tdeeType']}', style: const TextStyle(color: Colors.white)),
+                            Text(
+                              'TDEE Type: ${plan['tdeeType']}',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            const Divider(color: Colors.white30, height: 20),
+                            const Text(
+                              'Diet Plan',
+                              style: TextStyle(
+                                color: Colors.greenAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text('Breakfast: ${diet['breakfast'] ?? '-'}',
+                                style: const TextStyle(color: Colors.white)),
+                            const SizedBox(height: 4),
+                            Text('Noon: ${diet['noon'] ?? '-'}',
+                                style: const TextStyle(color: Colors.white)),
+                            const SizedBox(height: 4),
+                            Text('Supper: ${diet['supper'] ?? '-'}',
+                                style: const TextStyle(color: Colors.white)),
+                            const SizedBox(height: 4),
+                            Text('Dinner: ${diet['dinner'] ?? '-'}',
+                                style: const TextStyle(color: Colors.white)),
+                            const SizedBox(height: 4),
+                            Text('Supplements: ${diet['supplements'] ?? '-'}',
+                                style: const TextStyle(color: Colors.white)),
                           ],
                         ),
                       ),

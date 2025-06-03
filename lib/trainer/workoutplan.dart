@@ -12,9 +12,14 @@ class AssignWorkoutPlanPage extends StatefulWidget {
 class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
   String? selectedUserId;
   List<Map<String, dynamic>> assignedUsers = [];
-  List<String> selectedExercises = [];
+  List<String> exerciseList = [];
   final TextEditingController repsController = TextEditingController();
   final TextEditingController caloriesController = TextEditingController();
+  final TextEditingController breakfastController = TextEditingController();
+  final TextEditingController noonController = TextEditingController();
+  final TextEditingController supperController = TextEditingController();
+  final TextEditingController dinnerController = TextEditingController();
+  final TextEditingController supplementsController = TextEditingController();
   String? selectedTdeeType;
 
   final List<String> availableExercises = [
@@ -35,7 +40,8 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
 
   Future<void> fetchAssignedUsers() async {
     final trainerId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    final trainerDoc = await FirebaseFirestore.instance.collection('trainers').doc(trainerId).get();
+    final trainerDoc =
+        await FirebaseFirestore.instance.collection('trainers').doc(trainerId).get();
 
     if (!trainerDoc.exists) {
       setState(() => isLoading = false);
@@ -51,7 +57,8 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
           .collection('users')
           .where(FieldPath.documentId, whereIn: batch)
           .get();
-      users.addAll(snapshot.docs.map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>}));
+      users.addAll(snapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>}));
     }
 
     setState(() {
@@ -62,10 +69,15 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
 
   Future<void> assignWorkoutPlan() async {
     if (selectedUserId == null ||
-        selectedExercises.isEmpty ||
+        exerciseList.isEmpty ||
         repsController.text.isEmpty ||
         caloriesController.text.isEmpty ||
-        selectedTdeeType == null) {
+        selectedTdeeType == null ||
+        breakfastController.text.isEmpty ||
+        noonController.text.isEmpty ||
+        supperController.text.isEmpty ||
+        dinnerController.text.isEmpty ||
+        supplementsController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
@@ -77,10 +89,17 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
         .doc(selectedUserId)
         .collection('dailyWorkoutPlans')
         .add({
-      'exercises': selectedExercises,
+      'exercises': exerciseList,
       'reps': repsController.text,
       'calories': caloriesController.text,
       'tdeeType': selectedTdeeType,
+      'dietPlan': {
+        'breakfast': breakfastController.text,
+        'noon': noonController.text,
+        'supper': supperController.text,
+        'dinner': dinnerController.text,
+        'supplements': supplementsController.text,
+      },
       'date': DateTime.now(),
       'trainerId': FirebaseAuth.instance.currentUser!.uid,
     });
@@ -90,9 +109,15 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
     );
 
     setState(() {
-      selectedExercises.clear();
+      selectedUserId = null;
+      exerciseList.clear();
       repsController.clear();
       caloriesController.clear();
+      breakfastController.clear();
+      noonController.clear();
+      supperController.clear();
+      dinnerController.clear();
+      supplementsController.clear();
       selectedTdeeType = null;
     });
   }
@@ -143,15 +168,15 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
                     Wrap(
                       spacing: 10,
                       children: availableExercises.map((exercise) {
-                        final isSelected = selectedExercises.contains(exercise);
+                        final isSelected = exerciseList.contains(exercise);
                         return ChoiceChip(
                           label: Text(exercise),
                           selected: isSelected,
                           onSelected: (selected) {
                             setState(() {
                               isSelected
-                                  ? selectedExercises.remove(exercise)
-                                  : selectedExercises.add(exercise);
+                                  ? exerciseList.remove(exercise)
+                                  : exerciseList.add(exercise);
                             });
                           },
                           selectedColor: Colors.green,
@@ -204,6 +229,63 @@ class _AssignWorkoutPlanPageState extends State<AssignWorkoutPlanPage> {
                               ))
                           .toList(),
                       onChanged: (value) => setState(() => selectedTdeeType = value),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Diet Plan', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: breakfastController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Breakfast',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white10,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: noonController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Noon',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white10,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: supperController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Supper',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white10,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: dinnerController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Dinner',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white10,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: supplementsController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: 'Supplements',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.white10,
+                      ),
                     ),
                     const SizedBox(height: 30),
                     ElevatedButton.icon(

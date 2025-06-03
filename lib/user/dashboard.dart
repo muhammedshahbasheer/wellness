@@ -314,8 +314,7 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
     ),
   ),
 );
-
-  Widget _weekReviewPage() => GestureDetector(
+Widget _weekReviewPage() => GestureDetector(
   onTap: () {
     Navigator.push(
       context,
@@ -323,11 +322,12 @@ class _CalorieSliderScreenState extends State<CalorieSliderScreen> {
     );
   },
   child: _dashboardCard(
-    title: "Week Review",
-    subtitle: "Analyze your weekly health trends.",
-    buttonText: "Check Insights",
+    title: "Workout Demo",
+    subtitle: "Watch demonstrations of key exercises.",
+    buttonText: "View Workouts",
   ),
 );
+
 
 
   Widget _weightProgressPage() => _chartCard("Weight Progress", Colors.blue);
