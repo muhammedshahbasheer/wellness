@@ -1,16 +1,13 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:wellness/loginpage.dart';
-
 
 class ForgotPasswordScreen extends StatelessWidget {
   ForgotPasswordScreen({Key? key}) : super(key: key);
 
   final TextEditingController _emailController = TextEditingController();
- 
-Future<String?> sendPasswordResetEmail(String email) async {
+
+  Future<String?> sendPasswordResetEmail(String email) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email.trim());
       return null; // Success
@@ -18,35 +15,37 @@ Future<String?> sendPasswordResetEmail(String email) async {
       return e.toString(); // Return error message
     }
   }
+
   Future<void> _resetPassword(BuildContext context) async {
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter your email!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email!')),
+      );
       return;
     }
 
     final error = await sendPasswordResetEmail(email);
     if (error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset link sent! Check your email.'),
-        ),
+        const SnackBar(content: Text('Password reset link sent! Check your email.')),
       );
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.deepPurple,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -56,10 +55,7 @@ Future<String?> sendPasswordResetEmail(String email) async {
             );
           },
         ),
-        backgroundColor: Colors.white,
-        foregroundColor:Colors.teal,
       ),
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -71,7 +67,7 @@ Future<String?> sendPasswordResetEmail(String email) async {
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color:Colors.teal,
+                color: Colors.deepPurple,
               ),
             ),
             const SizedBox(height: 10),
@@ -86,7 +82,7 @@ Future<String?> sendPasswordResetEmail(String email) async {
             ElevatedButton(
               onPressed: () => _resetPassword(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
+                backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -104,23 +100,17 @@ Future<String?> sendPasswordResetEmail(String email) async {
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    String hint,
-    IconData icon,
-  ) {
+  Widget _buildTextField(TextEditingController controller, String hint, IconData icon) {
     return TextField(
       controller: controller,
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color:Colors.teal),
+        prefixIcon: Icon(icon, color: Colors.deepPurple),
         hintStyle: const TextStyle(color: Colors.grey),
         hintText: hint,
         filled: true,
-        fillColor: Colors.grey.shade100,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 20,
-          horizontal: 20,
-        ),
+        fillColor: Colors.grey.shade900,
+        contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,
